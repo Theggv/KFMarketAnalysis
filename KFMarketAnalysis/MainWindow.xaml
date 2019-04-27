@@ -1,0 +1,76 @@
+﻿<Window x:Class="KFMarketAnalysis.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KFMarketAnalysis"
+        xmlns:vms="clr-namespace:KFMarketAnalysis.ViewModels"
+        xmlns:views="clr-namespace:KFMarketAnalysis.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="650" Width="1200" WindowState="Maximized">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vms:DescriptionVM}">
+            <views:DescriptionView/>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid d:DataContext="{d:DesignInstance {x:Type vms:MainVM}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="500"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="350"/>
+        </Grid.ColumnDefinitions>
+
+        <views:LootBoxListView Grid.Column="0"
+                               DataContext="{Binding LootBoxListVM}"/>
+
+        <DockPanel Grid.Column="1">
+            <StackPanel DockPanel.Dock="Top">
+                <Label Margin="10" 
+                   FontSize="16" Foreground="Black" FontWeight="Bold">
+                    Selected container:
+                </Label>
+
+                <views:LootBoxView Margin="10" Grid.Row="1"
+                               DataContext="{Binding LootBoxVM}"/>
+
+                <Button Margin="10"
+                    Content="Search"
+                    Command="{Binding SearchCommand}"/>
+
+                <!--
+                <views:ProxyView Margin="10"
+                             DataContext="{Binding ProxyVM}"/>
+                -->
+
+                <Label Margin="10"
+                   FontSize="16" Foreground="Black" FontWeight="Bold">
+                    Description:
+                </Label>
+            </StackPanel>
+            
+            <ListBox Margin="10" DockPanel.Dock="Bottom"
+                     ScrollViewer.VerticalScrollBarVisibility="Visible"
+                     ItemsSource="{Binding Descriptions}"/>
+        </DockPanel>
+
+        <Grid Grid.Column="2">
+            
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <Label Margin="10" Grid.Row="0"
+                   FontSize="16" Foreground="Black" FontWeight="Bold">
+                Loaded items:
+            </Label>
+
+            <views:MarketItemListView Grid.Row="1"
+                                  DataContext="{Binding MarketItemListVM}"/>
+        </Grid>
+    </Grid>
+</Window>

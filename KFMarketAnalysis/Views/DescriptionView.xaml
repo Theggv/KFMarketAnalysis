@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="KFMarketAnalysis.Views.DescriptionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:KFMarketAnalysis.Views"
+             xmlns:vms="clr-namespace:KFMarketAnalysis.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid d:DataContext="{d:DesignInstance {x:Type vms:DescriptionVM}}">
+        <Label Content="{Binding Text}" FontSize="14">
+            <Label.Foreground>
+                <SolidColorBrush Color="{Binding TextColor}"/>
+            </Label.Foreground>
+        </Label>
+    </Grid>
+</UserControl>
