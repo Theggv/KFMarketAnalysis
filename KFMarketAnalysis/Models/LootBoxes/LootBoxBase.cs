@@ -22,12 +22,12 @@ namespace KFMarketAnalysis.Models.LootBoxes
     {
         protected BitmapImage icon;
 
-        protected string spanPattern = @"<br><span\sstyle=.{1,2}color:\s(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,40})<.{1,2}span>";
-        protected string fontPattern = @"<br><font\scolor=.{1,2}(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,50})<.{1,2}font>";
+        protected string spanPattern = @"<br><span\sstyle=.{1,2}color:\s(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,45})<.{1,2}span>";
+        protected string fontPattern = @"<br><font\scolor=.{1,2}(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,45})<.{1,2}font>";
 
         public string Name { get; set; }
 
-        public double Profit => Items?.Where(x => x.Price > 0)?.ToList()?.Sum(item => item.Price) ?? 0;
+        public double Profit => Items.ToArray().Where(x => x.Price > 0)?.Sum(item => item.Price) ?? 0;
 
         public List<IMarketItem> Items { get; set; }
 
@@ -60,6 +60,10 @@ namespace KFMarketAnalysis.Models.LootBoxes
         }
 
 
+        /// <summary>
+        /// Добавление предмета в лутбокс
+        /// </summary>
+        /// <param name="item"></param>
         public void AddItem(IMarketItem item)
         {
             var marketItem = item as MarketItem;
@@ -78,9 +82,14 @@ namespace KFMarketAnalysis.Models.LootBoxes
             RaisePropertyChanged("Items");
         }
 
+        /// <summary>
+        /// Загрузка иконки лутбокса
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="name"></param>
         public virtual void GetIcon(string code, string name)
         {
-            RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Icon, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.WithoutDelay, () =>
             {
                 Icon = RequestsUtil.GetImageLootBox(code, name);
 
@@ -91,14 +100,18 @@ namespace KFMarketAnalysis.Models.LootBoxes
             });
         }
 
-        public abstract void LoadItems();
-
+        /// <summary>
+        /// Загрузка описания лутбокса
+        /// </summary>
         public virtual void LoadDescription()
         {
-            RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Description, async () =>
+            RaisePropertyChanged("OnAddInQueue");
+
+
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.High, async () =>
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest
-                 .Create(RequestBuilder.ItemRequest(Name));
+                    .Create(RequestBuilder.ItemRequest(Name));
 
                 if (ProxySingleton.GetInstance().CanUse)
                     request.Proxy = ProxySingleton.GetInstanceNext().Proxy;
@@ -117,7 +130,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
                 JSONObject json = JSONParser.Parse(content);
 
-                if (json.GetValue("success").ToString() == "false" 
+                if (json.GetValue("success").ToString() == "false"
                 || json.GetValue("total_count").ToString() == "0")
                     return false;
 
@@ -149,12 +162,22 @@ namespace KFMarketAnalysis.Models.LootBoxes
                     match = match.NextMatch();
                 }
 
-                RaisePropertyChanged("OnDescriptionLoaded");
+                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.High, () =>
+                {
+                    RaisePropertyChanged("OnDescriptionLoaded");
+
+                    return Task.FromResult(true);
+                }, false);
 
                 LoadItems();
 
                 return true;
             });
         }
+
+        /// <summary>
+        /// Загрузка предметов лутбокса
+        /// </summary>
+        public abstract void LoadItems();
     }
 }

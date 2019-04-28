@@ -52,7 +52,7 @@ namespace KFMarketAnalysis.Models
 
         public void GetIcon(string code, string name, string lootBox = "")
         {
-            RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Icon, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.WithoutDelay, () =>
             {
                 Icon = RequestsUtil.GetImageItem(code, name, lootBox);
 
@@ -65,7 +65,7 @@ namespace KFMarketAnalysis.Models
 
         public void GetPrice()
         {
-            RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Price, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 Price = RequestsUtil.GetPrice(Name);
 

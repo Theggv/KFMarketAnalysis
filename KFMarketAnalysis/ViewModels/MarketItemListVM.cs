@@ -41,6 +41,7 @@ namespace KFMarketAnalysis.ViewModels
         }
 
         public List<MarketItemVM> Items => items
+            .ToArray()
             .OrderByDescending(item => item.Item?.Price).ToList();
 
         public MarketItemListVM()

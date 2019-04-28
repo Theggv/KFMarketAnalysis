@@ -7,23 +7,35 @@
              xmlns:vms="clr-namespace:KFMarketAnalysis.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="100" d:DesignWidth="300">
-    <Border>
+    <UserControl.Style>
+        <Style>
+            <Style.Resources>
+                <Style TargetType="{x:Type Label}">
+                    <Setter Property="Foreground" Value="{StaticResource WhiteTextColor}"/>
+                </Style>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter Property="Foreground" Value="{StaticResource WhiteTextColor}"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+    </UserControl.Style>
+
+    <Border Style="{StaticResource DarkBorder}">
         <Border.InputBindings>
             <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding DoubleClick}"/>
         </Border.InputBindings>
         
-        <Grid d:DataContext="{d:DesignInstance {x:Type vms:MarketItemVM}}"
-          Background="DarkGray">
+        <Grid d:DataContext="{d:DesignInstance {x:Type vms:MarketItemVM}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="75"/>
-                <ColumnDefinition Width="225"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Icon -->
             <Image VerticalAlignment="Center"
                HorizontalAlignment="Center"
                Stretch="Fill"
-               Margin="5"
+               Margin="7"
                Source="{Binding Icon}"/>
 
             <Grid Grid.Column="1">
@@ -35,17 +47,14 @@
                 <!-- Item name -->
                 <Label>
                     <TextBlock TextWrapping="WrapWithOverflow"
-                           FontSize="16"
-                           Text="{Binding Name}">
-                        <TextBlock.Foreground>
-                            <SolidColorBrush Color="{Binding NameColor}"/>
-                        </TextBlock.Foreground>
-                    </TextBlock>
+                               Text="{Binding Name}"
+                               FontSize="14"/>
                 </Label>
 
                 <!-- Price -->
-                <Label Grid.Row="1" Content="{Binding Price}"
-                   FontSize="14" Foreground="Black"/>
+                <Label Grid.Row="1"
+                       Content="{Binding Price}"
+                       FontSize="14"/>
             </Grid>
         </Grid>
     </Border>

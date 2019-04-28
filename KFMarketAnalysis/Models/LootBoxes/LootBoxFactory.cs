@@ -20,6 +20,9 @@ namespace KFMarketAnalysis.Models.LootBoxes
             if (s.Contains("Cyber Samurai"))
                 return new LootBoxCyberSamurai(s);
 
+            if (s.Contains("Emote"))
+                return new LootBoxEmote(s);
+
             if (s.Contains("Crate"))
                 return new LootBoxCrate(s);
 

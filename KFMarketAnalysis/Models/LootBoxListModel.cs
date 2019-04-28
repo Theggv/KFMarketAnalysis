@@ -32,13 +32,13 @@ namespace KFMarketAnalysis.Models
 
         private void LoadLootBoxes()
         {
-            //LoadBoxes("Crate");
+            LoadBoxes("Crate");
             LoadBoxes("USB");
         }
 
         private void LoadBoxes(string name)
         {
-            RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Description, async () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.High, async () =>
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest
                     .Create(RequestBuilder.SearchRequest(name));

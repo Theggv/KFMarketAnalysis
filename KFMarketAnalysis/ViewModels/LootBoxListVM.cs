@@ -18,10 +18,14 @@ namespace KFMarketAnalysis.ViewModels
     {
         private LootBoxListModel model;
         private LootBoxVM selectedLootBox;
+        private List<LootBoxVM> lootBoxes;
 
         private object _lock = new object();
 
-        public ObservableCollection<LootBoxVM> LootBoxes { get; set; }
+        public IEnumerable<LootBoxVM> LootBoxes
+        {
+            get => lootBoxes.ToArray().OrderByDescending(x => x.State);
+        }
 
         public LootBoxVM SelectedLootBox
         {
@@ -30,7 +34,7 @@ namespace KFMarketAnalysis.ViewModels
             {
                 selectedLootBox = value;
 
-                RaisePropertyChanged("LootBoxSelected");
+                RaisePropertyChanged("OnLootBoxSelected");
             }
         }
 
@@ -38,7 +42,7 @@ namespace KFMarketAnalysis.ViewModels
         {
             model = new LootBoxListModel(this);
 
-            LootBoxes = new ObservableCollection<LootBoxVM>();
+            lootBoxes = new List<LootBoxVM>();
             BindingOperations.EnableCollectionSynchronization(LootBoxes, _lock);
             
             Task.Run(() => GetLootBoxes());
@@ -46,7 +50,9 @@ namespace KFMarketAnalysis.ViewModels
         public void AddLootBox(ILootBox item)
         {
             var lootBoxVM = new LootBoxVM(item);
-            LootBoxes.Add(lootBoxVM);
+            lootBoxes.Add(lootBoxVM);
+
+            RaisePropertyChanged(nameof(LootBoxes));
 
             lootBoxVM.PropertyChanged += (s, e) =>
             {
@@ -55,6 +61,9 @@ namespace KFMarketAnalysis.ViewModels
 
                 if (e.PropertyName == "OnItemLoaded")
                     RaisePropertyChanged("OnItemLoaded");
+
+                if(e.PropertyName == "OnStateChanged")
+                    RaisePropertyChanged(nameof(LootBoxes));
             };
         }
 

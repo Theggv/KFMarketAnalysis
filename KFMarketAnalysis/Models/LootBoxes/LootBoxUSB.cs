@@ -22,19 +22,26 @@ namespace KFMarketAnalysis.Models.LootBoxes
         
         public override void LoadItems()
         {
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            {
+                RaisePropertyChanged("OnLoadStarted");
+
+                return Task.FromResult(true);
+            }, false);
+
             foreach (var description in Description)
             {
-                RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Item, async () =>
+                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest
-                    .Create(RequestBuilder.SearchRequest(description.Text));
+                        .Create(RequestBuilder.SearchRequest(description.Text));
 
                     if (ProxySingleton.GetInstanceNext().CanUse)
                         request.Proxy = ProxySingleton.GetInstance().Proxy;
 
                     HttpWebResponse response = await RequestsUtil.GetResponseAsync(request);
 
-                    await Task.Delay(RequestConveyorSingleton.Delay);
+                    await Task.Delay(RequestHandler.Delay);
 
                     if (response == null)
                         return false;
@@ -78,17 +85,16 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
                         RaisePropertyChanged("OnItemLoaded");
                     }
-
                     return true;
                 });
             }
 
-            RequestConveyorSingleton.GetInstance().AddAction(RequestConveyorSingleton.Priority.Icon, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
             {
                 RaisePropertyChanged("OnLoadCompleted");
 
                 return Task.FromResult(true);
-            });
+            }, false);
         }
     }
 }

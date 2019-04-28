@@ -21,84 +21,45 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
         public override void LoadItems()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest
-                  .Create(RequestBuilder.ItemRequest(Name));
-
-            if (ProxySingleton.GetInstance().CanUse)
-                request.Proxy = ProxySingleton.GetInstance().Proxy;
-
-            HttpWebResponse response = RequestsUtil.GetResponse(request);
-
-            if (response == null)
-                return;
-
-            Stream stream = response.GetResponseStream();
-            StreamReader streamReader = new StreamReader(stream);
-
-            string content = streamReader.ReadToEnd();
-
-            response.Close();
-
-            JSONObject json = JSONParser.Parse(content);
-
-            if (json.GetValue("success").ToString() == "false")
-                return;
-
-            var description = json["assets"][0][0][0].GetArray("descriptions")[0].GetValue("value").ToString();
-
-            var pattern = @"<br><\w{4}\s\w{5}=.{1,2}.{0,6}\w{0,1}(#\w{6}).{1,2}>(.{1,50})<.{1,3}\w{4}>";
-
-            if (Regex.IsMatch(description, pattern))
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
             {
-                var skins = Regex
-                    .Split(description, pattern)
-                    .Where(str => str.Contains("|") || str.Trim() != "")
-                    .Where(str => str[0] != '#' && !str.Contains("Precious") && !str.Contains("Contains")).ToList();
+                RaisePropertyChanged("OnLoadStarted");
 
-                var colors = Regex
-                   .Split(description, pattern)
-                   .Where(str => str.Length == 7 && str[0] == '#').ToList();
+                return Task.FromResult(true);
+            }, false);
 
-                Description = new List<Description>();
-
-                for (int i = 0; i < skins.Count; i++)
-                {
-                    Description.Add(new Description(skins[i]).WithColor(colors[i]));
-                }
-
-                RaisePropertyChanged("OnDescriptionLoaded");
-            }
-
-            Task.Run(async () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
             {
-                var skin = "D.A.R.";
+                string skin = "D.A.R.";
 
-                request = (HttpWebRequest)WebRequest
+                HttpWebRequest request = (HttpWebRequest)WebRequest
                     .Create(RequestBuilder.SearchRequest(skin));
 
                 if (ProxySingleton.GetInstance().CanUse)
                     request.Proxy = ProxySingleton.GetInstance().Proxy;
 
-                response = await RequestsUtil.GetResponseAsync(request);
-
-                await Task.Delay(4000);
+                HttpWebResponse response = await RequestsUtil.GetResponseAsync(request);
 
                 if (response == null)
-                    return;
+                    return false;
 
-                stream = response.GetResponseStream();
-                streamReader = new StreamReader(stream);
+                Stream stream = response.GetResponseStream();
+                StreamReader streamReader = new StreamReader(stream);
 
-                content = streamReader.ReadToEnd();
+                string content = streamReader.ReadToEnd();
 
                 response.Close();
 
-                json = JSONParser.Parse(content);
+                JSONObject json = JSONParser.Parse(content);
 
-                if (json.GetValue("total_count").ToString() == "0")
-                    return;
+                if (json.GetValue("success").ToString() == "false" ||
+                    json.GetValue("total_count").ToString() == "0")
+                    return false;
 
                 var results = json.GetArray("results");
+
+                if (results == null)
+                    return false;
 
                 string hashName, imageCode;
                 IMarketItem item;
@@ -123,8 +84,15 @@ namespace KFMarketAnalysis.Models.LootBoxes
                     RaisePropertyChanged("OnItemLoaded");
                 }
 
-                RaisePropertyChanged("OnLoadCompleted");
+                return true;
             });
+
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            {
+                RaisePropertyChanged("OnLoadCompleted");
+
+                return Task.FromResult(true);
+            }, false);
         }
     }
 }

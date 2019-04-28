@@ -12,11 +12,25 @@
             <local:LootBoxView/>
         </DataTemplate>
     </UserControl.Resources>
-    <Grid d:DataContext="{d:DesignInstance {x:Type vms:LootBoxListVM}}">
-        
-        <ListBox Margin="10"
+
+    <UserControl.Style>
+        <Style>
+            <Style.Resources>
+                <Style TargetType="{x:Type ListBox}" 
+                       BasedOn="{StaticResource CustomListBox}"/>
+                <Style TargetType="{x:Type ListBoxItem}" 
+                       BasedOn="{StaticResource CustomListBoxItem}"/>
+            </Style.Resources>
+        </Style>
+    </UserControl.Style>
+
+    <Border Style="{StaticResource LightBorder}"
+            Margin="10">
+        <Grid d:DataContext="{d:DesignInstance {x:Type vms:LootBoxListVM}}">
+            <ListBox 
                  ItemsSource="{Binding LootBoxes}"
                  SelectedItem="{Binding SelectedLootBox}">
-        </ListBox>
-    </Grid>
+            </ListBox>
+        </Grid>
+    </Border>
 </UserControl>

@@ -20,128 +20,99 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
         public LootBoxCyberSamurai(string name) : base(name) { }
 
-
+       
         public override void LoadItems()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest
-                  .Create(RequestBuilder.ItemRequest(Name));
+            var temp = Description
+                    .Select(str => str.Text.Split('|')[0].Trim()).ToList();
 
-            if (ProxySingleton.GetInstance().CanUse)
-                request.Proxy = ProxySingleton.GetInstance().Proxy;
+            var skins = new List<string>();
 
-            HttpWebResponse response = RequestsUtil.GetResponse(request);
-
-            if (response == null)
-                return;
-
-            Stream stream = response.GetResponseStream();
-            StreamReader streamReader = new StreamReader(stream);
-
-            string content = streamReader.ReadToEnd();
-
-            response.Close();
-
-            JSONObject json = JSONParser.Parse(content);
-
-            if (json.GetValue("success").ToString() == "false")
-                return;
-
-            var description = json["assets"][0][0][0].GetArray("descriptions")[0].GetValue("value").ToString();
-
-            description = HttpUtility.HtmlDecode(description).Replace("\"", "\\");
-
-            var pattern = @"<br><\w{4}\s\w{5}=.{1,2}.{0,6}\w{0,1}(#\w{6}).{1,2}>(.{1,50})<.{1,3}\w{4}>";
-
-            if (Regex.IsMatch(description, pattern))
+            for (int i = 0; i < temp.Count; i++)
             {
-                var skins = Regex
-                    .Split(description, pattern)
-                    .Where(str => str.Contains("|") || str.Trim() != "")
-                    .Where(str => str[0] != '#' && !str.Contains("Precious") && !str.Contains("Contains")).ToList();
+                string item = temp[i];
 
-                var colors = Regex
-                   .Split(description, pattern)
-                   .Where(str => str.Length == 7 && str[0] == '#').ToList();
+                if (item.Contains("Expression"))
+                    item = item.Replace("Expression", "Expresion");
 
-                Description = new List<Description>();
+                if (!skins.Contains(item))
+                    skins.Add(item);
+            }
 
-                for (int i = 0; i < skins.Count; i++)
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            {
+                RaisePropertyChanged("OnLoadStarted");
+
+                return Task.FromResult(true);
+            }, false);
+
+            foreach (var description in skins)
+            {
+                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
                 {
-                    Description.Add(new Description(skins[i]).WithColor(colors[i]));
-                }
+                    HttpWebRequest request = (HttpWebRequest)WebRequest
+                    .Create(RequestBuilder.SearchRequest(description));
 
-                RaisePropertyChanged("OnDescriptionLoaded");
+                    if (ProxySingleton.GetInstanceNext().CanUse)
+                        request.Proxy = ProxySingleton.GetInstance().Proxy;
 
-                var temp = skins
-                    .Select(str => str.Split('|')[0].Trim()).ToList();
+                    HttpWebResponse response = await RequestsUtil.GetResponseAsync(request);
 
-                skins = new List<string>();
+                    await Task.Delay(RequestHandler.Delay);
 
-                foreach (var item in temp)
-                {
-                    if (!skins.Contains(item))
-                        skins.Add(item);
-                }
+                    if (response == null)
+                        return false;
 
-                Task.Run(async () =>
-                {
-                    foreach (var skin in skins)
+                    Stream stream = response.GetResponseStream();
+                    StreamReader streamReader = new StreamReader(stream);
+
+                    string content = streamReader.ReadToEnd();
+
+                    response.Close();
+
+                    JSONObject json = JSONParser.Parse(content);
+
+                    var results = json.GetArray("results");
+
+                    if (results == null)
+                        return false;
+
+                    string hashName, imageCode;
+                    IMarketItem item;
+
+                    for (int i = 0; i < results.Count; i++)
                     {
-                        request = (HttpWebRequest)WebRequest
-                            .Create(RequestBuilder.SearchRequest(skin));
+                        hashName = results[i]["asset_description"].GetValue("market_hash_name").ToString();
 
-                        if (ProxySingleton.GetInstance().CanUse)
-                            request.Proxy = ProxySingleton.GetInstance().Proxy;
-
-                        response = await RequestsUtil.GetResponseAsync(request);
-
-                        await Task.Delay(4000);
-
-                        if (response == null)
-                            return;
-
-                        stream = response.GetResponseStream();
-                        streamReader = new StreamReader(stream);
-
-                        content = streamReader.ReadToEnd();
-
-                        response.Close();
-
-                        json = JSONParser.Parse(content);
-
-                        if (json.GetValue("total_count").ToString() == "0")
-                            continue;
-
-                        var results = json.GetArray("results");
-
-                        string marketName, hashName, imageCode;
-                        IMarketItem item;
-
-                        for (int i = 0; i < results.Count; i++)
+                        if (!hashName.ToLower().Contains(description.ToLower()) ||
+                            Items.Where(x => x.Name == hashName).Count() > 0)
                         {
-                            hashName = results[i]["asset_description"].GetValue("market_hash_name").ToString();
-                            marketName = results[i]["asset_description"].GetValue("name").ToString();
-
-                            if (!marketName.Contains(skin))
-                                continue;
-
-                            item = new MarketItem(hashName);
-
-                            AddItem(item);
-
-                            imageCode = results[i]["asset_description"].GetValue("icon_url").ToString();
-                            
-                            item.GetIcon(imageCode, hashName, Name);
-
-                            item.GetPrice();
-                            
-                            RaisePropertyChanged("OnItemLoaded");
+                            continue;
                         }
+
+                        item = new MarketItem(hashName);
+
+                        AddItem(item);
+
+                        imageCode = results[i]["asset_description"].GetValue("icon_url").ToString();
+
+                        item.GetIcon(imageCode, hashName, Name);
+
+                        item.GetPrice();
+
+                        RaisePropertyChanged("OnItemLoaded");
                     }
 
-                    RaisePropertyChanged("OnLoadCompleted");
+                    return true;
                 });
             }
+
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            {
+                RaisePropertyChanged("OnLoadCompleted");
+
+                return Task.FromResult(true);
+            }, false);
         }
     }
 }

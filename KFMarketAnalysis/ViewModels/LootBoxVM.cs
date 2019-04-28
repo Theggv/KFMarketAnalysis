@@ -11,11 +11,34 @@ using System.Windows.Media.Imaging;
 using Prism.Commands;
 using System.Windows.Media;
 using KFMarketAnalysis.Models.LootBoxes;
+using System.Windows;
 
 namespace KFMarketAnalysis.ViewModels
 {
     public class LootBoxVM : BindableBase
     {
+        public enum eState
+        {
+            NotLoaded = 0,
+            InQueue,
+            Loading,
+            Loaded
+        };
+
+        private eState state = eState.NotLoaded;
+
+        public eState State
+        {
+            get => state;
+            set
+            {
+                state = value;
+
+                RaisePropertyChanged(nameof(BackgroundColor));
+                RaisePropertyChanged("OnStateChanged");
+            }
+        }
+
         public ILootBox LootBox { get; private set; }
         
         public string Name => LootBox?.Name;
@@ -30,42 +53,63 @@ namespace KFMarketAnalysis.ViewModels
             $"Items count:\t{LootBox?.Items?.Count}";
 
         public string NumLoadedItems =>
-            $"Loaded:\t\t{LootBox?.Items?.Where(item => item.Price > 0).Count()}";
+            $"Loaded:\t\t{LootBox?.Items?.ToArray().Where(item => item.Price > 0).Count()}";
 
         public string NumErrors =>
-            $"Errors:\t\t{LootBox?.Items?.Where(item => item.Price < 0).Count()}";
+            $"Errors:\t\t{LootBox?.Items?.ToArray().Where(item => item.Price < 0).Count()}";
 
-        public Color ProfitWithoutBundleColor
+        public string ProfitWithoutBundleColor
         {
             get
             {
                 var profit = GetProfitWithoutBundle();
 
                 if (profit < 0)
-                    return Colors.Red;
+                    return Application.Current.Resources["RedTextColor"].ToString();
 
                 if (profit < 1000)
-                    return Colors.Yellow;
+                    return Application.Current.Resources["YellowTextColor"].ToString();
 
-                return Colors.Green;
+                return Application.Current.Resources["GreenTextColor"].ToString();
             }
         }
-        public Color ProfitWithBundleColor
+
+        public string ProfitWithBundleColor
         {
             get
             {
                 var profit = GetProfitWithBundle();
                 
                 if (profit < 0)
-                    return Colors.Red;
+                    return Application.Current.Resources["RedTextColor"].ToString();
 
                 if (profit < 1000)
-                    return Colors.Yellow;
+                    return Application.Current.Resources["YellowTextColor"].ToString();
 
-                return Colors.Green;
+                return Application.Current.Resources["GreenTextColor"].ToString();
             }
         }
 
+
+        public string BackgroundColor
+        {
+            get
+            {
+                switch (State)
+                {
+                    case eState.NotLoaded:
+                        return Application.Current.Resources["RedTextColor"].ToString();
+                    case eState.InQueue:
+                        return Application.Current.Resources["WhiteTextColor"].ToString();
+                    case eState.Loading:
+                        return Application.Current.Resources["YellowTextColor"].ToString();
+                    case eState.Loaded:
+                        return Application.Current.Resources["GreenTextColor"].ToString();
+                    default:
+                        return Application.Current.Resources["RedTextColor"].ToString();
+                }
+            }
+        }
 
         public MarketItemListVM MarketItemListVM { get; set; }
 
@@ -79,6 +123,23 @@ namespace KFMarketAnalysis.ViewModels
 
         public LootBoxVM(ILootBox lootBox)
         {
+            Update = new DelegateCommand(() =>
+            {
+                RaisePropertyChanged(nameof(Icon));
+
+                RaisePropertyChanged(nameof(Name));
+
+                RaisePropertyChanged(nameof(ProfitWithBundle));
+                RaisePropertyChanged(nameof(ProfitWithBundleColor));
+
+                RaisePropertyChanged(nameof(ProfitWithoutBundle));
+                RaisePropertyChanged(nameof(ProfitWithoutBundleColor));
+
+                RaisePropertyChanged(nameof(NumItems));
+                RaisePropertyChanged(nameof(NumLoadedItems));
+                RaisePropertyChanged(nameof(NumErrors));
+            });
+
             LootBox = lootBox;
 
             (LootBox as LootBoxBase).PropertyChanged += (s, e) =>
@@ -93,6 +154,11 @@ namespace KFMarketAnalysis.ViewModels
                 if(e.PropertyName == "OnIconLoaded")
                 {
                     Update.Execute();
+                }
+
+                if(e.PropertyName == "OnLoadStarted")
+                {
+                    State = eState.Loading;
                 }
 
                 if (e.PropertyName == "OnItemLoaded")
@@ -112,9 +178,14 @@ namespace KFMarketAnalysis.ViewModels
                     RaisePropertyChanged("OnDescriptionLoaded");
                 }
 
-                if(e.PropertyName == "OnLoadCompleted")
+                if(e.PropertyName == "OnAddInQueue")
                 {
-                    // nothing
+                    State = eState.InQueue;
+                }
+
+                if (e.PropertyName == "OnLoadCompleted")
+                {
+                    State = eState.Loaded;
                 }
             };
 
@@ -124,23 +195,6 @@ namespace KFMarketAnalysis.ViewModels
             Click = new DelegateCommand(() =>
             {
 
-            });
-
-            Update = new DelegateCommand(() =>
-            {
-                RaisePropertyChanged(nameof(Icon));
-
-                RaisePropertyChanged(nameof(Name));
-
-                RaisePropertyChanged(nameof(ProfitWithBundle));
-                RaisePropertyChanged(nameof(ProfitWithBundleColor));
-
-                RaisePropertyChanged(nameof(ProfitWithoutBundle));
-                RaisePropertyChanged(nameof(ProfitWithoutBundleColor));
-
-                RaisePropertyChanged(nameof(NumItems));
-                RaisePropertyChanged(nameof(NumLoadedItems));
-                RaisePropertyChanged(nameof(NumErrors));
             });
 
             Update.Execute();

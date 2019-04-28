@@ -13,11 +13,11 @@ using System.Windows.Media.Imaging;
 
 namespace KFMarketAnalysis.Models.LootBoxes
 {
-    public class LootBoxDeity: LootBoxBase
+    public class LootBoxEmote: LootBoxBase
     {
-        public LootBoxDeity(): base() { }
+        public LootBoxEmote() : base() { }
 
-        public LootBoxDeity(string name) : base(name) { }
+        public LootBoxEmote(string name) : base(name) { }
 
 
         public override void LoadItems()
@@ -25,14 +25,16 @@ namespace KFMarketAnalysis.Models.LootBoxes
             var temp = Description
                     .Select(str => str.Text.Split('|')[0].Trim()).ToList();
 
-            var skins = new List<string>();
-
-            for (int i = 0; i < temp.Count; i++)
+            foreach (var desc in Description)
             {
-                string item = temp[i];
+                if (desc.Text.Contains("Its Raining Dosh"))
+                    desc.Text = desc.Text.Replace("Its Raining Dosh", "It's Raining Dosh");
 
-                if (!skins.Contains(item))
-                    skins.Add(item);
+                if (desc.Text.Contains("Heal"))
+                    desc.Text = desc.Text.Replace("Heal", "Heel");
+
+                if (desc.Text.Contains("Thunder Clap"))
+                    desc.Text = desc.Text.Replace("Thunder Clap", "The Booty");
             }
 
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
@@ -42,7 +44,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
                 return Task.FromResult(true);
             }, false);
 
-            foreach (var description in skins)
+            foreach (var description in Description.Select(desc => desc.Text).ToList())
             {
                 RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
                 {

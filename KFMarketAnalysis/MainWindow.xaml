@@ -13,7 +13,27 @@
             <views:DescriptionView/>
         </DataTemplate>
     </Window.Resources>
-    <Grid d:DataContext="{d:DesignInstance {x:Type vms:MainVM}}">
+
+    <Window.Style>
+        <Style>
+            <Style.Resources>
+                <Style TargetType="{x:Type ListBox}" 
+                       BasedOn="{StaticResource CustomListBox}"/>
+                <Style TargetType="{x:Type ListBoxItem}" 
+                       BasedOn="{StaticResource CustomListBoxItem}"/>
+                
+                <Style TargetType="{x:Type Label}">
+                    <Setter Property="Foreground" Value="{StaticResource GrayTextColor}"/>
+                </Style>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter Property="Foreground" Value="{StaticResource GrayTextColor}"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+    </Window.Style>
+    
+    <Grid d:DataContext="{d:DesignInstance {x:Type vms:MainVM}}"
+          Background="{StaticResource MainWindowColor}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -30,16 +50,17 @@
         <DockPanel Grid.Column="1">
             <StackPanel DockPanel.Dock="Top">
                 <Label Margin="10" 
-                   FontSize="16" Foreground="Black" FontWeight="Bold">
+                   FontSize="16" FontWeight="Bold">
                     Selected container:
                 </Label>
 
                 <views:LootBoxView Margin="10" Grid.Row="1"
                                DataContext="{Binding LootBoxVM}"/>
 
-                <Button Margin="10"
-                    Content="Search"
-                    Command="{Binding SearchCommand}"/>
+                <Button Style="{StaticResource CustomButton}"
+                        Margin="10" Height="25"
+                        Content="Search"
+                        Command="{Binding SearchCommand}"/>
 
                 <!--
                 <views:ProxyView Margin="10"
@@ -47,25 +68,27 @@
                 -->
 
                 <Label Margin="10"
-                   FontSize="16" Foreground="Black" FontWeight="Bold">
+                   FontSize="16" FontWeight="Bold">
                     Description:
                 </Label>
             </StackPanel>
-            
-            <ListBox Margin="10" DockPanel.Dock="Bottom"
-                     ScrollViewer.VerticalScrollBarVisibility="Visible"
-                     ItemsSource="{Binding Descriptions}"/>
+
+            <Border Style="{StaticResource LightBorder}"
+                    Background="{StaticResource DarkBorderColor}"
+                    Margin="10" DockPanel.Dock="Bottom">
+                <ListBox ItemsSource="{Binding Descriptions}"
+                         ItemContainerStyle="{StaticResource WithoutSelectionListBoxItem}"/>
+            </Border>
         </DockPanel>
 
         <Grid Grid.Column="2">
-            
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             
             <Label Margin="10" Grid.Row="0"
-                   FontSize="16" Foreground="Black" FontWeight="Bold">
+                   FontSize="16" FontWeight="Bold">
                 Loaded items:
             </Label>
 

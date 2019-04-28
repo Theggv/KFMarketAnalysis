@@ -72,11 +72,12 @@
     <Compile Include="Models\LootBoxes\LootBoxCyberSamurai.cs" />
     <Compile Include="Models\LootBoxes\LootBoxDAR.cs" />
     <Compile Include="Models\LootBoxes\LootBoxDeity.cs" />
+    <Compile Include="Models\LootBoxes\LootBoxEmote.cs" />
     <Compile Include="Models\LootBoxes\LootBoxFactory.cs" />
     <Compile Include="Models\LootBoxListModel.cs" />
     <Compile Include="Models\ProxySingleton.cs" />
     <Compile Include="Models\Utility\Logging.cs" />
-    <Compile Include="Models\Utility\RequestConveyorSingleton.cs" />
+    <Compile Include="Models\Utility\RequestHandler.cs" />
     <Compile Include="Models\Utility\RequestsUtil.cs" />
     <Compile Include="ViewModels\DescriptionVM.cs" />
     <Compile Include="ViewModels\LootBoxListVM.cs" />

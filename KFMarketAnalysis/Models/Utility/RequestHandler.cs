@@ -8,23 +8,24 @@ using System.Threading.Tasks;
 
 namespace KFMarketAnalysis.Models.Utility
 {
-    public class RequestConveyorSingleton
+    public class RequestHandler
     {
         public enum Priority
         {
-            Description,
-            Item,
-            Price,
-            Icon
+            High,
+            Medium,
+            Low,
+            LowWithoutDelay,
+            WithoutDelay
         };
 
-        private static RequestConveyorSingleton instance;
+        private static RequestHandler instance;
 
-        private Queue<Func<Task<bool>>> highPriority;
-        private Queue<Func<Task<bool>>> mediumPriority;
-        private Queue<Func<Task<bool>>> lowPriority;
+        private Queue<Request> highPriority;
+        private Queue<Request> mediumPriority;
+        private Queue<Request> lowPriority;
 
-        private Queue<Func<Task<bool>>> withoutPriority;
+        private Queue<Request> withoutPriority;
 
 
         public static int Delay
@@ -44,42 +45,42 @@ namespace KFMarketAnalysis.Models.Utility
         }
 
 
-        private RequestConveyorSingleton()
+        private RequestHandler()
         {
             PriorityConveyor();
             ImagesConveyor();
             
-            highPriority = new Queue<Func<Task<bool>>>();
-            mediumPriority = new Queue<Func<Task<bool>>>();
-            lowPriority = new Queue<Func<Task<bool>>>();
-            withoutPriority = new Queue<Func<Task<bool>>>();
+            highPriority = new Queue<Request>();
+            mediumPriority = new Queue<Request>();
+            lowPriority = new Queue<Request>();
+            withoutPriority = new Queue<Request>();
         }
 
-        public static RequestConveyorSingleton GetInstance()
+        public static RequestHandler GetInstance()
         {
             if (instance == null)
             {
-                instance = new RequestConveyorSingleton();
+                instance = new RequestHandler();
             }
             
             return instance;
         }
         
-        public void AddAction(Priority priority, Func<Task<bool>> action)
+        public void AddAction(Priority priority, Func<Task<bool>> action, bool isNeedDelay = true)
         {
             switch(priority)
             {
-                case Priority.Description:
-                    highPriority.Enqueue(action);
+                case Priority.High:
+                    highPriority.Enqueue(new Request(action, isNeedDelay));
                     break;
-                case Priority.Price:
-                    mediumPriority.Enqueue(action);
+                case Priority.Medium:
+                    mediumPriority.Enqueue(new Request(action, isNeedDelay));
                     break;
-                case Priority.Item:
-                    lowPriority.Enqueue(action);
+                case Priority.Low:
+                    lowPriority.Enqueue(new Request(action, isNeedDelay));
                     break;
-                case Priority.Icon:
-                    withoutPriority.Enqueue(action);
+                case Priority.WithoutDelay:
+                    withoutPriority.Enqueue(new Request(action, false));
                     break;
             }
         }
@@ -132,15 +133,15 @@ namespace KFMarketAnalysis.Models.Utility
         /// <param name="numTries">Количество совершённых попыток</param>
         /// <param name="isNeedDelay">Нужен ли анти-спам</param>
         /// <returns>Количество совершённых попыток</returns>
-        private async Task<int> Handler(Queue<Func<Task<bool>>> actions, int numTries, bool isNeedDelay = true)
+        private async Task<int> Handler(Queue<Request> actions, int numTries)
         {
             try
             {
-                var action = actions.Peek();
+                var request = actions.Peek();
 
-                IAsyncResult asyncResult = action.BeginInvoke(null, null);
+                IAsyncResult asyncResult = request.Action.BeginInvoke(null, null);
 
-                var result = await action.EndInvoke(asyncResult);
+                var result = await request.Action.EndInvoke(asyncResult);
 
                 if (!result)
                     numTries++;
@@ -152,7 +153,7 @@ namespace KFMarketAnalysis.Models.Utility
                 numTries++;
             }
             
-            if (isNeedDelay)
+            if (actions.Peek().IsNeedDelay)
                 await Task.Delay(Delay);
 
             return numTries;
@@ -170,7 +171,7 @@ namespace KFMarketAnalysis.Models.Utility
 
                     if (withoutPriority.Count > 0)
                     {
-                        numTries = await Handler(withoutPriority, numTries, false);
+                        numTries = await Handler(withoutPriority, numTries);
 
                         if (numTries > 0 && numTries < 3)
                             continue;
@@ -179,6 +180,19 @@ namespace KFMarketAnalysis.Models.Utility
                     }
                 }
             }); 
+        }
+
+        sealed class Request
+        {
+            public Func<Task<bool>> Action { get; set; }
+
+            public bool IsNeedDelay { get; set; }
+
+            public Request(Func<Task<bool>> action, bool isNeedDelay)
+            {
+                Action = action;
+                IsNeedDelay = isNeedDelay;
+            }
         }
     }
 }

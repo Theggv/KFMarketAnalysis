@@ -43,19 +43,24 @@ namespace KFMarketAnalysis.ViewModels
 
             LootBoxListVM.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName == "LootBoxSelected")
+                if (e.PropertyName == "OnLootBoxSelected")
                 {
                     if (LootBoxListVM.SelectedLootBox == null)
                         return;
 
-                    lootBox = LootBoxListVM.SelectedLootBox.LootBox;
+                    Task.Run(async () =>
+                    {
+                        lootBox = LootBoxListVM.SelectedLootBox.LootBox;
 
-                    LootBoxVM = LootBoxListVM.SelectedLootBox;
+                        LootBoxVM = LootBoxListVM.SelectedLootBox;
 
-                    RaisePropertyChanged(nameof(LootBoxVM));
-                    RaisePropertyChanged(nameof(MarketItemListVM));
+                        await Task.Delay(275);
 
-                    RaisePropertyChanged(nameof(Descriptions));
+                        RaisePropertyChanged(nameof(LootBoxVM));
+                        RaisePropertyChanged(nameof(MarketItemListVM));
+
+                        RaisePropertyChanged(nameof(Descriptions));
+                    });
                 }
 
                 if(e.PropertyName == "OnItemLoaded")
@@ -72,7 +77,10 @@ namespace KFMarketAnalysis.ViewModels
             {
                 if (LootBoxListVM.SelectedLootBox == null)
                     return;
-                
+
+                if (LootBoxListVM.SelectedLootBox.State > LootBoxVM.eState.NotLoaded)
+                    return;
+
                 lootBox.LoadDescription();
             });
         }
