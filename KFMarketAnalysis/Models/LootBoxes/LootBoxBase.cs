@@ -1,5 +1,4 @@
-﻿using KFMarketAnalysis.Models;
-using KFMarketAnalysis.Models.Interfaces;
+﻿using KFMarketAnalysis.Models.Interfaces;
 using KFMarketAnalysis.Models.Json;
 using KFMarketAnalysis.Models.Utility;
 using Prism.Mvvm;
@@ -10,7 +9,6 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
-using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace KFMarketAnalysis.Models.LootBoxes
@@ -106,7 +104,6 @@ namespace KFMarketAnalysis.Models.LootBoxes
         public virtual void LoadDescription()
         {
             RaisePropertyChanged("OnAddInQueue");
-
 
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.High, async () =>
             {

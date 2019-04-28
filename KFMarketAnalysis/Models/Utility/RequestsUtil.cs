@@ -18,6 +18,11 @@ namespace KFMarketAnalysis.Models.Utility
             Process.Start($"https://steamcommunity.com/market/listings/232090/{item.Name}");
         }
 
+        public static void OpenInBrowser(ILootBox lootBox)
+        {
+            Process.Start($"https://steamcommunity.com/market/listings/232090/{lootBox.Name.Replace("#", "%23")}");
+        }
+
         public static BitmapImage GetImageLootBox(string code, string name)
         {
             try

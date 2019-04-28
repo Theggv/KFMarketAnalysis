@@ -116,7 +116,7 @@ namespace KFMarketAnalysis.ViewModels
 
         public BitmapImage Icon => LootBox?.Icon;
 
-        public DelegateCommand Click { get; set; }
+        public DelegateCommand DoubleClick { get; set; }
 
         public DelegateCommand Update { get; set; }
 
@@ -192,9 +192,9 @@ namespace KFMarketAnalysis.ViewModels
             MarketItemListVM = new MarketItemListVM(this, LootBox.Items?
                 .Select(x => new MarketItemVM(x)));
 
-            Click = new DelegateCommand(() =>
+            DoubleClick = new DelegateCommand(() =>
             {
-
+                RequestsUtil.OpenInBrowser(LootBox);
             });
 
             Update.Execute();

@@ -5,6 +5,7 @@
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <SolidColorBrush x:Key="DarkImageColor" Color="#FF121923"/>
         <SolidColorBrush x:Key="DarkBorderColor" Color="#FF16202D"/>
         <SolidColorBrush x:Key="LightBorderColor" Color="#FF1B2838"/>
         <SolidColorBrush x:Key="MainWindowColor" Color="#FF1B2838"/>

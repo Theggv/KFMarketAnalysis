@@ -32,11 +32,13 @@
             </Grid.ColumnDefinitions>
 
             <!-- Icon -->
-            <Image VerticalAlignment="Center"
-               HorizontalAlignment="Center"
-               Stretch="Fill"
-               Margin="7"
-               Source="{Binding Icon}"/>
+            <Border Margin="7" Style="{StaticResource DarkBorder}"
+                    Background="{StaticResource DarkImageColor}">
+                <Image VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Stretch="Fill"
+                       Source="{Binding Icon}"/>
+            </Border>
 
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>

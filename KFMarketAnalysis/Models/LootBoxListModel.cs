@@ -81,7 +81,7 @@ namespace KFMarketAnalysis.Models
                 }
 
                 return true;
-            });
+            }, false);
         }
     }
 }
