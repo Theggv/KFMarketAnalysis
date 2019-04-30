@@ -31,6 +31,9 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
         public string Name { get; set; }
 
+        [JsonIgnore]
+        public bool IsBusy { get; set; }
+
 
         public double Profit => Items.ToArray().Where(x => x.Price > 0)?.Sum(item => item.Price) * 0.87 ?? 0;
 
@@ -73,6 +76,9 @@ namespace KFMarketAnalysis.Models.LootBoxes
             set
             {
                 state = value;
+
+                if(state == LootBoxState.ItemsLoaded)
+                    IsBusy = false;
 
                 RaisePropertyChanged(nameof(State));
             }
@@ -201,17 +207,26 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
         public virtual void Update()
         {
+            if (IsBusy)
+                return;
+
             if(State <= LootBoxState.Queue)
             {
+                IsBusy = true;
+
                 LoadDescription();
             }
             else if (State <= LootBoxState.LoadStarted)
             {
+                IsBusy = true;
+
                 Items.Clear();
                 LoadItems();
             }
             else
             {
+                IsBusy = true;
+
                 LoadPrices();
             }
         }

@@ -70,6 +70,8 @@ namespace KFMarketAnalysis.Models.Interfaces
         /// </summary>
         double ProfitWithoutBundle { get; }
 
+        bool IsBusy { get; set; }
+
 
         /// <summary>
         /// Количество предметов в лутбоксе
