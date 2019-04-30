@@ -70,6 +70,9 @@ namespace KFMarketAnalysis.Models.Interfaces
         /// </summary>
         double ProfitWithoutBundle { get; }
 
+        /// <summary>
+        /// Есть ли задание
+        /// </summary>
         bool IsBusy { get; set; }
 
 
