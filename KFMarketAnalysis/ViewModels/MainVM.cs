@@ -81,7 +81,7 @@ namespace KFMarketAnalysis.ViewModels
                 if (LootBoxListVM.SelectedLootBox.State > LootBoxVM.eState.NotLoaded)
                     return;
 
-                lootBox.LoadDescription();
+                lootBox.Update();
             });
         }
 

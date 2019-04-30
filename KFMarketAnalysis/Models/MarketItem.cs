@@ -1,5 +1,6 @@
 ﻿using KFMarketAnalysis.Models.Interfaces;
 using KFMarketAnalysis.Models.Utility;
+using Newtonsoft.Json;
 using Prism.Commands;
 using Prism.Mvvm;
 using System;
@@ -19,15 +20,21 @@ namespace KFMarketAnalysis.Models
 
         public string Name { get; set; }
 
+        [JsonIgnore]
         public BitmapImage Icon
         {
             get => icon;
             set
             {
                 icon = value;
-
                 RaisePropertyChanged("OnIconLoaded");
             }
+        }
+
+        public string IconUri
+        {
+            get => Icon?.UriSource?.ToString();
+            set => Icon = new BitmapImage(new Uri(value));
         }
 
         public double Price
@@ -65,7 +72,7 @@ namespace KFMarketAnalysis.Models
 
         public void GetPrice()
         {
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
             {
                 Price = RequestsUtil.GetPrice(Name);
 

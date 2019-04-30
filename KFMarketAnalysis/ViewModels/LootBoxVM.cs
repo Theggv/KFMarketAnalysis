@@ -19,10 +19,30 @@ namespace KFMarketAnalysis.ViewModels
     {
         public enum eState
         {
+            /// <summary>
+            /// Не загружено
+            /// </summary>
             NotLoaded = 0,
-            InQueue,
-            Loading,
-            Loaded
+            /// <summary>
+            /// В очереди
+            /// </summary>
+            Queue,
+            /// <summary>
+            /// Загружено описание
+            /// </summary>
+            DescriptionLoaded,
+            /// <summary>
+            /// Началась загрузка предметов
+            /// </summary>
+            LoadStarted,
+            /// <summary>
+            /// Загрузка списка предметов завершена
+            /// </summary>
+            ItemsLoaded,
+            /// <summary>
+            /// Загрузка цен завершена
+            /// </summary>
+            PricesLoaded
         };
 
         private eState state = eState.NotLoaded;
@@ -99,11 +119,15 @@ namespace KFMarketAnalysis.ViewModels
                 {
                     case eState.NotLoaded:
                         return Application.Current.Resources["RedTextColor"].ToString();
-                    case eState.InQueue:
+                    case eState.Queue:
                         return Application.Current.Resources["WhiteTextColor"].ToString();
-                    case eState.Loading:
+                    case eState.DescriptionLoaded:
+                        return Application.Current.Resources["LightYellowTextColor"].ToString();
+                    case eState.LoadStarted:
                         return Application.Current.Resources["YellowTextColor"].ToString();
-                    case eState.Loaded:
+                    case eState.ItemsLoaded:
+                        return Application.Current.Resources["LightGreenTextColor"].ToString();
+                    case eState.PricesLoaded:
                         return Application.Current.Resources["GreenTextColor"].ToString();
                     default:
                         return Application.Current.Resources["RedTextColor"].ToString();
@@ -142,12 +166,15 @@ namespace KFMarketAnalysis.ViewModels
 
             LootBox = lootBox;
 
-            (LootBox as LootBoxBase).PropertyChanged += (s, e) =>
+            LootBox.PropertyChanged += (s, e) =>
             {
                 if(e.PropertyName == "OnPriceLoaded")
                 {
                     Update.Execute();
-                    
+
+                    if (LootBox.Items.Count(x => x.Price == 0) == 0)
+                        State = eState.PricesLoaded;
+
                     RaisePropertyChanged("OnItemLoaded");
                 }
 
@@ -158,7 +185,7 @@ namespace KFMarketAnalysis.ViewModels
 
                 if(e.PropertyName == "OnLoadStarted")
                 {
-                    State = eState.Loading;
+                    State = eState.LoadStarted;
                 }
 
                 if (e.PropertyName == "OnItemLoaded")
@@ -175,17 +202,19 @@ namespace KFMarketAnalysis.ViewModels
 
                 if (e.PropertyName == "OnDescriptionLoaded")
                 {
+                    State = eState.DescriptionLoaded;
+
                     RaisePropertyChanged("OnDescriptionLoaded");
                 }
 
                 if(e.PropertyName == "OnAddInQueue")
                 {
-                    State = eState.InQueue;
+                    State = eState.Queue;
                 }
 
                 if (e.PropertyName == "OnLoadCompleted")
                 {
-                    State = eState.Loaded;
+                    State = eState.ItemsLoaded;
                 }
             };
 

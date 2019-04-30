@@ -1,14 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Newtonsoft.Json;
 
 namespace KFMarketAnalysis.Models.Interfaces
 {
-    public interface ILootBox
+    [JsonObject]
+    public interface ILootBox: INotifyPropertyChanged
     {
+        //event EventHandler OnDescriptionLoading;
+        //event EventHandler OnDescriptionLoaded;
+
+        //event EventHandler OnListItemsLoading;
+        //event EventHandler OnListItemsLoaded;
+
+        //event EventHandler OnItemLoaded;
+        //event EventHandler OnPriceLoaded;
+
+        //event EventHandler OnListPricesLoading;
+        //event EventHandler OnListPricesLoaded;
+
+        //event EventHandler OnIconLoading;
+        //event EventHandler OnIconLoaded;
+
+
         string Name { get; set; }
 
         double Profit { get; }
@@ -16,7 +35,7 @@ namespace KFMarketAnalysis.Models.Interfaces
         /// <summary>
         /// Предметы, которые содержатся в лутбоксе
         /// </summary>
-        List<IMarketItem> Items { get; set; }
+        List<MarketItem> Items { get; set; }
         
         /// <summary>
         /// Описание
@@ -29,7 +48,7 @@ namespace KFMarketAnalysis.Models.Interfaces
         BitmapImage Icon { get; set; }
 
 
-        void LoadDescription();
+        void Update();
 
         void LoadItems();
 

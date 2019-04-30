@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Windows.Media;
 
 namespace KFMarketAnalysis.Models
 {
+    [JsonObject]
     public class Description
     {
         public Color Color { get; set; }

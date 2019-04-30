@@ -22,7 +22,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
         
         public override void LoadItems()
         {
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 RaisePropertyChanged("OnLoadStarted");
 
@@ -31,7 +31,10 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
             foreach (var description in Description)
             {
-                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
+                if (description.Text.Contains("Exceedingly"))
+                    continue;
+
+                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, async () =>
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest
                         .Create(RequestBuilder.SearchRequest(description.Text));
@@ -81,17 +84,18 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
                         item.GetIcon(imageCode, hashName, Name);
 
-                        item.GetPrice();
-
                         RaisePropertyChanged("OnItemLoaded");
                     }
                     return true;
                 });
             }
 
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 RaisePropertyChanged("OnLoadCompleted");
+
+                IsItemsListLoaded = true;
+                LoadPrices();
 
                 return Task.FromResult(true);
             }, false);

@@ -61,6 +61,11 @@
                         Margin="10" Height="25"
                         Content="Search"
                         Command="{Binding SearchCommand}"/>
+                
+                <Button Style="{StaticResource CustomButton}"
+                        Margin="10" Height="25"
+                        Content="Save"
+                        Command="{Binding LootBoxListVM.Save}"/>
 
                 <!--
                 <views:ProxyView Margin="10"

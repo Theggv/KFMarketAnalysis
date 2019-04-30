@@ -34,9 +34,9 @@ namespace KFMarketAnalysis.ViewModels
 
         public MarketItemVM(IMarketItem item)
         {
-            this.Item = item;
+            Item = item;
 
-            (Item as MarketItem).PropertyChanged += (s, e) =>
+            Item.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == "OnPriceLoaded")
                 {

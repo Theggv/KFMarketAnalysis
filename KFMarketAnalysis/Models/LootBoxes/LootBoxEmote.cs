@@ -37,7 +37,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
                     desc.Text = desc.Text.Replace("Thunder Clap", "The Booty");
             }
 
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 RaisePropertyChanged("OnLoadStarted");
 
@@ -46,7 +46,10 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
             foreach (var description in Description.Select(desc => desc.Text).ToList())
             {
-                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
+                if (description.Contains("Exceedingly"))
+                    continue;
+
+                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, async () =>
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest
                     .Create(RequestBuilder.SearchRequest(description));
@@ -96,8 +99,6 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
                         item.GetIcon(imageCode, hashName, Name);
 
-                        item.GetPrice();
-
                         RaisePropertyChanged("OnItemLoaded");
                     }
 
@@ -105,9 +106,12 @@ namespace KFMarketAnalysis.Models.LootBoxes
                 });
             }
 
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 RaisePropertyChanged("OnLoadCompleted");
+
+                IsItemsListLoaded = true;
+                LoadPrices();
 
                 return Task.FromResult(true);
             }, false);

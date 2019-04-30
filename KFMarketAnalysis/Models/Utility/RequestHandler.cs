@@ -15,7 +15,6 @@ namespace KFMarketAnalysis.Models.Utility
             High,
             Medium,
             Low,
-            LowWithoutDelay,
             WithoutDelay
         };
 

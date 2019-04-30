@@ -12,10 +12,12 @@
 
         <SolidColorBrush x:Key="WhiteTextColor" Color="#FFAFAFAF"/>
         <SolidColorBrush x:Key="GrayTextColor" Color="#FFAFAFAF"/>
-        
+
         <SolidColorBrush x:Key="RedTextColor" Color="#FFCB3D3D"/>
-        <SolidColorBrush x:Key="GreenTextColor" Color="#FF80C842"/>
+        <SolidColorBrush x:Key="LightYellowTextColor" Color="#FFEBDD81"/>
         <SolidColorBrush x:Key="YellowTextColor" Color="#FFCCBD57"/>
+        <SolidColorBrush x:Key="LightGreenTextColor" Color="#FFB1E883"/>
+        <SolidColorBrush x:Key="GreenTextColor" Color="#FF80C842"/>
 
         <Duration x:Key="AnimInTimeSpan">0:0:0.15</Duration>
         <Duration x:Key="AnimOutTimeSpan">0:0:0.25</Duration>

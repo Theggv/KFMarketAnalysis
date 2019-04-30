@@ -35,7 +35,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
                     skins.Add(item);
             }
 
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 RaisePropertyChanged("OnLoadStarted");
 
@@ -44,7 +44,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
             foreach (var description in skins)
             {
-                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, async () =>
+                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, async () =>
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest
                     .Create(RequestBuilder.SearchRequest(description));
@@ -94,8 +94,6 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
                         item.GetIcon(imageCode, hashName, Name);
 
-                        item.GetPrice();
-
                         RaisePropertyChanged("OnItemLoaded");
                     }
 
@@ -103,9 +101,12 @@ namespace KFMarketAnalysis.Models.LootBoxes
                 });
             }
 
-            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
+            RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
                 RaisePropertyChanged("OnLoadCompleted");
+
+                IsItemsListLoaded = true;
+                LoadPrices();
 
                 return Task.FromResult(true);
             }, false);

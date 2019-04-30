@@ -3,31 +3,29 @@ using KFMarketAnalysis.Models.Json;
 using KFMarketAnalysis.Models.LootBoxes;
 using KFMarketAnalysis.Models.Utility;
 using KFMarketAnalysis.ViewModels;
+using Newtonsoft.Json;
 using Prism.Mvvm;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace KFMarketAnalysis.Models
 {
-    public class LootBoxListModel: BindableBase
+    public class LootBoxListModel : BindableBase
     {
         private LootBoxListVM vm;
-        private List<ILootBox> lootBoxes;
 
         public LootBoxListModel(LootBoxListVM vm)
         {
             this.vm = vm;
-
-            lootBoxes = new List<ILootBox>();
         }
 
-        public List<ILootBox> GetLootBoxes()
+        public void GetLootBoxes()
         {
-            if (lootBoxes.Count == 0)
+            if(!Load())
                 LoadLootBoxes();
-
-            return lootBoxes;
         }
 
         private void LoadLootBoxes()
@@ -82,6 +80,51 @@ namespace KFMarketAnalysis.Models
 
                 return true;
             }, false);
+        }
+
+        public bool Load()
+        {
+            if (File.Exists("test.json"))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+
+                using (StreamReader sr = new StreamReader("test.json"))
+                {
+                    using (JsonReader reader = new JsonTextReader(sr))
+                    {
+                        vm.LootBoxes = serializer.Deserialize<List<LootBoxUSB>>(reader)
+                            .Select(x => new LootBoxVM(x));
+                    }
+                }
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public void Save(IEnumerable<LootBoxVM> lootBoxes)
+        {
+            Task.Run(() =>
+            {
+                using (StreamWriter sw = new StreamWriter("test.json"))
+                {
+                    using (JsonWriter writer = new JsonTextWriter(sw))
+                    {
+                        JsonSerializer serializer = new JsonSerializer
+                        {
+                            Formatting = Formatting.Indented
+                        };
+
+                        serializer.Error += (src, ev) =>
+                        {
+                            Logging.AddToLog(src, ev.ErrorContext?.Error);
+                        };
+
+                        serializer.Serialize(sw, lootBoxes.Select(x => x.LootBox).ToList());
+                    }
+                }
+            });
         }
     }
 }

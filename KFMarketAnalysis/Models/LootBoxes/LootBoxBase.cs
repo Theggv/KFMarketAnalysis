@@ -1,7 +1,10 @@
 ﻿using KFMarketAnalysis.Models.Interfaces;
 using KFMarketAnalysis.Models.Json;
 using KFMarketAnalysis.Models.Utility;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Prism.Mvvm;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,15 +25,18 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
         protected string spanPattern = @"<br><span\sstyle=.{1,2}color:\s(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,45})<.{1,2}span>";
         protected string fontPattern = @"<br><font\scolor=.{1,2}(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,45})<.{1,2}font>";
-
+        
         public string Name { get; set; }
-
+        
         public double Profit => Items.ToArray().Where(x => x.Price > 0)?.Sum(item => item.Price) ?? 0;
 
-        public List<IMarketItem> Items { get; set; }
+        public bool IsItemsListLoaded { get; set; }
+        
+        public List<MarketItem> Items { get; set; }
 
         public List<Description> Description { get; set; }
 
+        [JsonIgnore]
         public BitmapImage Icon
         {
             get => icon;
@@ -41,17 +47,21 @@ namespace KFMarketAnalysis.Models.LootBoxes
                 RaisePropertyChanged("OnIconLoaded");
             }
         }
-
+        public string IconUri
+        {
+            get => Icon?.UriSource?.ToString();
+            set => Icon = new BitmapImage(new Uri(value));
+        }
 
         public LootBoxBase()
         {
-            Items = new List<IMarketItem>();
+            Items = new List<MarketItem>();
             Description = new List<Description>();
         }
 
         public LootBoxBase(string name)
         {
-            Items = new List<IMarketItem>();
+            Items = new List<MarketItem>();
             Description = new List<Description>();
 
             Name = name;
@@ -64,18 +74,13 @@ namespace KFMarketAnalysis.Models.LootBoxes
         /// <param name="item"></param>
         public void AddItem(IMarketItem item)
         {
-            var marketItem = item as MarketItem;
-
-            if (marketItem != null)
+            item.PropertyChanged += (s, e) =>
             {
-                marketItem.PropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == "OnPriceLoaded")
-                        RaisePropertyChanged("OnPriceLoaded");
-                };
-            }
+                if (e.PropertyName == "OnPriceLoaded")
+                    RaisePropertyChanged("OnPriceLoaded");
+            };
 
-            Items.Add(item);
+            Items.Add(item as MarketItem);
 
             RaisePropertyChanged("Items");
         }
@@ -97,6 +102,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
                 return Task.FromResult(true);
             });
         }
+
 
         /// <summary>
         /// Загрузка описания лутбокса
@@ -172,9 +178,33 @@ namespace KFMarketAnalysis.Models.LootBoxes
             });
         }
 
+        public virtual void Update()
+        {
+            if (Description.Count == 0)
+                LoadDescription();
+            else if (!IsItemsListLoaded)
+            {
+                Items.Clear();
+                LoadItems();
+            }
+            else
+                LoadPrices();
+        }
+
         /// <summary>
         /// Загрузка предметов лутбокса
         /// </summary>
         public abstract void LoadItems();
+
+        public void LoadPrices()
+        {
+            if (!IsItemsListLoaded)
+                return;
+
+            foreach (var item in Items)
+            {
+                item.GetPrice();
+            }
+        }
     }
 }
