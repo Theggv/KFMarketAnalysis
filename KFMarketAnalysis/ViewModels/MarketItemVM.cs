@@ -22,6 +22,9 @@ namespace KFMarketAnalysis.ViewModels
         public string Price =>
             $"Price:\t{Converters.ConvertToPrice(Item?.Price, true)}";
 
+        public string LastUpdate =>
+            $"Updated:\t{Item?.LastUpdate}";
+
         public Color NameColor { get; set; } = Colors.Black;
         
 

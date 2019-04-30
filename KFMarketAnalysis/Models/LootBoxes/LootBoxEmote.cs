@@ -17,6 +17,8 @@ namespace KFMarketAnalysis.Models.LootBoxes
     {
         public LootBoxEmote() : base() { }
 
+        public LootBoxEmote(LootBoxBase lootBox) : base(lootBox) { }
+
         public LootBoxEmote(string name) : base(name) { }
 
 
@@ -39,9 +41,12 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
-                RaisePropertyChanged("OnLoadStarted");
+                return Task.Run(() =>
+                {
+                    State = LootBoxState.LoadStarted;
 
-                return Task.FromResult(true);
+                    return true;
+                });
             }, false);
 
             foreach (var description in Description.Select(desc => desc.Text).ToList())
@@ -108,12 +113,14 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
-                RaisePropertyChanged("OnLoadCompleted");
+                return Task.Run(() =>
+                {
+                    State = LootBoxState.ItemsLoaded;
 
-                IsItemsListLoaded = true;
-                LoadPrices();
+                    LoadPrices();
 
-                return Task.FromResult(true);
+                    return true;
+                });
             }, false);
         }
     }

@@ -33,6 +33,8 @@ namespace KFMarketAnalysis.ViewModels
         
         public DelegateCommand SearchCommand { get; set; }
 
+        public DelegateCommand Exit { get; set; }
+
 
         public MainVM()
         {
@@ -78,10 +80,15 @@ namespace KFMarketAnalysis.ViewModels
                 if (LootBoxListVM.SelectedLootBox == null)
                     return;
 
-                if (LootBoxListVM.SelectedLootBox.State > LootBoxVM.eState.NotLoaded)
-                    return;
-
                 lootBox.Update();
+            });
+
+            Exit = new DelegateCommand(() =>
+            {
+                lock(new object())
+                {
+                    LootBoxListVM.Save.Execute();
+                }
             });
         }
 

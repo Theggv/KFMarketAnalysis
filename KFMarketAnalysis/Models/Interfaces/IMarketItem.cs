@@ -16,7 +16,10 @@ namespace KFMarketAnalysis.Models.Interfaces
 
         double Price { get; set; }
 
+        DateTime LastUpdate { get; set; }
+
         BitmapImage Icon { get; set; }
+
 
         void GetPrice();
 

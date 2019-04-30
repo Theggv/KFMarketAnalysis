@@ -17,77 +17,37 @@ namespace KFMarketAnalysis.ViewModels
 {
     public class LootBoxVM : BindableBase
     {
-        public enum eState
-        {
-            /// <summary>
-            /// Не загружено
-            /// </summary>
-            NotLoaded = 0,
-            /// <summary>
-            /// В очереди
-            /// </summary>
-            Queue,
-            /// <summary>
-            /// Загружено описание
-            /// </summary>
-            DescriptionLoaded,
-            /// <summary>
-            /// Началась загрузка предметов
-            /// </summary>
-            LoadStarted,
-            /// <summary>
-            /// Загрузка списка предметов завершена
-            /// </summary>
-            ItemsLoaded,
-            /// <summary>
-            /// Загрузка цен завершена
-            /// </summary>
-            PricesLoaded
-        };
-
-        private eState state = eState.NotLoaded;
-
-        public eState State
-        {
-            get => state;
-            set
-            {
-                state = value;
-
-                RaisePropertyChanged(nameof(BackgroundColor));
-                RaisePropertyChanged("OnStateChanged");
-            }
-        }
-
         public ILootBox LootBox { get; private set; }
+
         
         public string Name => LootBox?.Name;
 
+
         public string ProfitWithoutBundle =>
-            $"Without bundle:\t{Converters.ConvertToPrice(GetProfitWithoutBundle())}";
+            $"Without bundle:\t{Converters.ConvertToPrice(LootBox?.ProfitWithoutBundle)}";
 
         public string ProfitWithBundle =>
-             $"With bundle:\t{Converters.ConvertToPrice(GetProfitWithBundle())}";
+             $"With bundle:\t{Converters.ConvertToPrice(LootBox?.ProfitWithBundle)}";
+
 
         public string NumItems =>
-            $"Items count:\t{LootBox?.Items?.Count}";
+            $"Items count:\t{LootBox?.Count}";
 
         public string NumLoadedItems =>
-            $"Loaded:\t\t{LootBox?.Items?.ToArray().Where(item => item.Price > 0).Count()}";
+            $"Loaded:\t\t{LootBox?.Items?.ToArray()?.Count(item => item.Price > 0)}";
 
         public string NumErrors =>
-            $"Errors:\t\t{LootBox?.Items?.ToArray().Where(item => item.Price < 0).Count()}";
+            $"Errors:\t\t{LootBox?.Items?.ToArray()?.Count(item => item.Price < 0)}";
+
 
         public string ProfitWithoutBundleColor
         {
             get
             {
-                var profit = GetProfitWithoutBundle();
-
-                if (profit < 0)
+                if (LootBox.ProfitWithoutBundle < 0)
                     return Application.Current.Resources["RedTextColor"].ToString();
 
-                if (profit < 1000)
+                if (LootBox.ProfitWithoutBundle < 1000)
                     return Application.Current.Resources["YellowTextColor"].ToString();
 
                 return Application.Current.Resources["GreenTextColor"].ToString();
@@ -98,12 +58,10 @@ namespace KFMarketAnalysis.ViewModels
         {
             get
             {
-                var profit = GetProfitWithBundle();
-                
-                if (profit < 0)
+                if (LootBox.ProfitWithBundle < 0)
                     return Application.Current.Resources["RedTextColor"].ToString();
 
-                if (profit < 1000)
+                if (LootBox.ProfitWithBundle < 1000)
                     return Application.Current.Resources["YellowTextColor"].ToString();
 
                 return Application.Current.Resources["GreenTextColor"].ToString();
@@ -115,19 +73,19 @@ namespace KFMarketAnalysis.ViewModels
         {
             get
             {
-                switch (State)
+                switch (LootBox.State)
                 {
-                    case eState.NotLoaded:
+                    case LootBoxState.NotLoaded:
                         return Application.Current.Resources["RedTextColor"].ToString();
-                    case eState.Queue:
+                    case LootBoxState.Queue:
                         return Application.Current.Resources["WhiteTextColor"].ToString();
-                    case eState.DescriptionLoaded:
+                    case LootBoxState.DescriptionLoaded:
                         return Application.Current.Resources["LightYellowTextColor"].ToString();
-                    case eState.LoadStarted:
+                    case LootBoxState.LoadStarted:
                         return Application.Current.Resources["YellowTextColor"].ToString();
-                    case eState.ItemsLoaded:
+                    case LootBoxState.ItemsLoaded:
                         return Application.Current.Resources["LightGreenTextColor"].ToString();
-                    case eState.PricesLoaded:
+                    case LootBoxState.PricesLoaded:
                         return Application.Current.Resources["GreenTextColor"].ToString();
                     default:
                         return Application.Current.Resources["RedTextColor"].ToString();
@@ -147,6 +105,7 @@ namespace KFMarketAnalysis.ViewModels
 
         public LootBoxVM(ILootBox lootBox)
         {
+            #region Commands init
             Update = new DelegateCommand(() =>
             {
                 RaisePropertyChanged(nameof(Icon));
@@ -159,36 +118,47 @@ namespace KFMarketAnalysis.ViewModels
                 RaisePropertyChanged(nameof(ProfitWithoutBundle));
                 RaisePropertyChanged(nameof(ProfitWithoutBundleColor));
 
+                RaisePropertyChanged(nameof(BackgroundColor));
+
                 RaisePropertyChanged(nameof(NumItems));
                 RaisePropertyChanged(nameof(NumLoadedItems));
                 RaisePropertyChanged(nameof(NumErrors));
             });
 
+            DoubleClick = new DelegateCommand(() =>
+            {
+                RequestsUtil.OpenInBrowser(LootBox);
+            });
+            #endregion
+
             LootBox = lootBox;
 
             LootBox.PropertyChanged += (s, e) =>
             {
-                if(e.PropertyName == "OnPriceLoaded")
+                if(e.PropertyName == nameof(ILootBox.State))
                 {
-                    Update.Execute();
+                    switch (LootBox.State)
+                    {
+                        case LootBoxState.NotLoaded:
+                            break;
+                        case LootBoxState.Queue:
+                            break;
+                        case LootBoxState.DescriptionLoaded:
+                            RaisePropertyChanged("OnDescriptionLoaded");
+                            break;
+                        case LootBoxState.LoadStarted:
+                            break;
+                        case LootBoxState.ItemsLoaded:
+                            break;
+                        case LootBoxState.PricesLoaded:
+                            break;
+                    }
 
-                    if (LootBox.Items.Count(x => x.Price == 0) == 0)
-                        State = eState.PricesLoaded;
-
-                    RaisePropertyChanged("OnItemLoaded");
+                    RaisePropertyChanged(nameof(ILootBox.State));
+                    RaisePropertyChanged(nameof(BackgroundColor));
                 }
 
-                if(e.PropertyName == "OnIconLoaded")
-                {
-                    Update.Execute();
-                }
-
-                if(e.PropertyName == "OnLoadStarted")
-                {
-                    State = eState.LoadStarted;
-                }
-
-                if (e.PropertyName == "OnItemLoaded")
+                if(e.PropertyName == "OnItemLoaded")
                 {
                     var item = LootBox.Items?.Last();
 
@@ -200,43 +170,31 @@ namespace KFMarketAnalysis.ViewModels
                     RaisePropertyChanged("OnItemLoaded");
                 }
 
-                if (e.PropertyName == "OnDescriptionLoaded")
+                if(e.PropertyName == "OnPriceLoaded")
                 {
-                    State = eState.DescriptionLoaded;
+                    if (LootBox.Count > 0 && LootBox.Items.ToArray().Count(x => x.Price == 0) == 0)
+                    {
+                        if(LootBox.State != LootBoxState.PricesLoaded)
+                            LootBox.State = LootBoxState.PricesLoaded;
+                    }
 
-                    RaisePropertyChanged("OnDescriptionLoaded");
+                    Update.Execute();
                 }
 
-                if(e.PropertyName == "OnAddInQueue")
+                if (e.PropertyName == "OnIconLoaded")
                 {
-                    State = eState.Queue;
-                }
-
-                if (e.PropertyName == "OnLoadCompleted")
-                {
-                    State = eState.ItemsLoaded;
+                    RaisePropertyChanged(nameof(Icon));
                 }
             };
+
 
             MarketItemListVM = new MarketItemListVM(this, LootBox.Items?
                 .Select(x => new MarketItemVM(x)));
 
-            DoubleClick = new DelegateCommand(() =>
-            {
-                RequestsUtil.OpenInBrowser(LootBox);
-            });
-
             Update.Execute();
-        }
 
-        private double GetProfitWithoutBundle()
-        {
-            return LootBox?.Profit * 0.87 - 170 * LootBox?.Items.Count ?? 0;
-        }
-
-        private double GetProfitWithBundle()
-        {
-            return LootBox?.Profit * 0.87 - 102.5 * LootBox?.Items.Count ?? 0;
+            if(LootBox.State >= LootBoxState.DescriptionLoaded)
+                RaisePropertyChanged("OnDescriptionLoaded");
         }
     }
 }

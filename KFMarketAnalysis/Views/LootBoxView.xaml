@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:KFMarketAnalysis.Views"
              xmlns:vms="clr-namespace:KFMarketAnalysis.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="150" d:DesignWidth="450">
+             d:DesignHeight="150" d:DesignWidth="500">
     <UserControl.Style>
         <Style>
             <Style.Resources>
@@ -45,9 +45,9 @@
 
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="3*"/>
                     <RowDefinition Height="2*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>

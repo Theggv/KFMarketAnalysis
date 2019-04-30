@@ -15,6 +15,8 @@ namespace KFMarketAnalysis.Models
 {
     public class LootBoxListModel : BindableBase
     {
+        private string dataPath = "data.json";
+
         private LootBoxListVM vm;
 
         public LootBoxListModel(LootBoxListVM vm)
@@ -84,16 +86,20 @@ namespace KFMarketAnalysis.Models
 
         public bool Load()
         {
-            if (File.Exists("test.json"))
+            if (File.Exists(dataPath))
             {
                 JsonSerializer serializer = new JsonSerializer();
 
-                using (StreamReader sr = new StreamReader("test.json"))
+                using (StreamReader sr = new StreamReader(dataPath))
                 {
                     using (JsonReader reader = new JsonTextReader(sr))
                     {
-                        vm.LootBoxes = serializer.Deserialize<List<LootBoxUSB>>(reader)
-                            .Select(x => new LootBoxVM(x));
+                        try
+                        {
+                            vm.LootBoxes = serializer.Deserialize<List<LootBoxUSB>>(reader)
+                                .Select(x => new LootBoxVM(LootBoxFactory.RestoreLootBox(x)));
+                        }
+                        catch { return false; }
                     }
                 }
 
@@ -103,28 +109,35 @@ namespace KFMarketAnalysis.Models
                 return false;
         }
 
-        public void Save(IEnumerable<LootBoxVM> lootBoxes)
+        public void Save(IEnumerable<LootBoxVM> lootBoxesVM)
         {
-            Task.Run(() =>
+            using (StreamWriter sw = new StreamWriter(dataPath))
             {
-                using (StreamWriter sw = new StreamWriter("test.json"))
+                using (JsonWriter writer = new JsonTextWriter(sw))
                 {
-                    using (JsonWriter writer = new JsonTextWriter(sw))
+                    JsonSerializer serializer = new JsonSerializer
                     {
-                        JsonSerializer serializer = new JsonSerializer
-                        {
-                            Formatting = Formatting.Indented
-                        };
+                        Formatting = Formatting.Indented
+                    };
 
-                        serializer.Error += (src, ev) =>
-                        {
-                            Logging.AddToLog(src, ev.ErrorContext?.Error);
-                        };
+                    serializer.Error += (src, ev) =>
+                    {
+                        Logging.AddToLog(src, ev.ErrorContext?.Error);
+                    };
 
-                        serializer.Serialize(sw, lootBoxes.Select(x => x.LootBox).ToList());
+                    var lootBoxes = lootBoxesVM.Select(x => x.LootBox);
+
+                    foreach (var item in lootBoxes)
+                    {
+                        if (item.State == LootBoxState.Queue)
+                            item.State = LootBoxState.NotLoaded;
+                        else if (item.State == LootBoxState.LoadStarted)
+                            item.State = LootBoxState.DescriptionLoaded;
                     }
+
+                    serializer.Serialize(sw, lootBoxes.ToList());
                 }
-            });
+            }
         }
     }
 }

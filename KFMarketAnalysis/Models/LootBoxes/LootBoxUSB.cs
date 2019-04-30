@@ -17,6 +17,8 @@ namespace KFMarketAnalysis.Models.LootBoxes
     {
         public LootBoxUSB() : base() { }
 
+        public LootBoxUSB(LootBoxBase lootBox) : base(lootBox) { }
+
         public LootBoxUSB(string name) : base(name) { }
 
         
@@ -24,9 +26,12 @@ namespace KFMarketAnalysis.Models.LootBoxes
         {
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
-                RaisePropertyChanged("OnLoadStarted");
+                return Task.Run(() =>
+                {
+                    State = LootBoxState.LoadStarted;
 
-                return Task.FromResult(true);
+                    return true;
+                });
             }, false);
 
             foreach (var description in Description)
@@ -92,12 +97,14 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Medium, () =>
             {
-                RaisePropertyChanged("OnLoadCompleted");
+                return Task.Run(() =>
+                {
+                    State = LootBoxState.ItemsLoaded;
 
-                IsItemsListLoaded = true;
-                LoadPrices();
+                    LoadPrices();
 
-                return Task.FromResult(true);
+                    return true;
+                });
             }, false);
         }
     }

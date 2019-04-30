@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:KFMarketAnalysis"
         xmlns:vms="clr-namespace:KFMarketAnalysis.ViewModels"
         xmlns:views="clr-namespace:KFMarketAnalysis.Views"
+        xmlns:z="http://schemas.microsoft.com/expression/2010/interactivity"
         mc:Ignorable="d"
         Title="MainWindow" Height="650" Width="1200" WindowState="Maximized">
     <Window.Resources>
@@ -14,6 +15,12 @@
         </DataTemplate>
     </Window.Resources>
 
+    <z:Interaction.Triggers>
+        <z:EventTrigger EventName="Closing">
+            <z:InvokeCommandAction Command="{Binding Exit}" />
+        </z:EventTrigger>
+    </z:Interaction.Triggers>
+    
     <Window.Style>
         <Style>
             <Style.Resources>
@@ -62,10 +69,10 @@
                         Content="Search"
                         Command="{Binding SearchCommand}"/>
                 
-                <Button Style="{StaticResource CustomButton}"
+                <!--<Button Style="{StaticResource CustomButton}"
                         Margin="10" Height="25"
                         Content="Save"
-                        Command="{Binding LootBoxListVM.Save}"/>
+                        Command="{Binding LootBoxListVM.Save}"/>-->
 
                 <!--
                 <views:ProxyView Margin="10"

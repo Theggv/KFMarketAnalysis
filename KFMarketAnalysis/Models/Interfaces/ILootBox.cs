@@ -9,43 +9,94 @@ using Newtonsoft.Json;
 
 namespace KFMarketAnalysis.Models.Interfaces
 {
+    /// <summary>
+    /// Состояние лутбокса
+    /// </summary>
+    public enum LootBoxState
+    {
+        /// <summary>
+        /// Не загружено
+        /// </summary>
+        NotLoaded = 0,
+        /// <summary>
+        /// В очереди
+        /// </summary>
+        Queue,
+        /// <summary>
+        /// Загружено описание
+        /// </summary>
+        DescriptionLoaded,
+        /// <summary>
+        /// Началась загрузка предметов
+        /// </summary>
+        LoadStarted,
+        /// <summary>
+        /// Загрузка списка предметов завершена
+        /// </summary>
+        ItemsLoaded,
+        /// <summary>
+        /// Загрузка цен завершена
+        /// </summary>
+        PricesLoaded
+    };
+
     [JsonObject]
     public interface ILootBox: INotifyPropertyChanged
     {
-        //event EventHandler OnDescriptionLoading;
-        //event EventHandler OnDescriptionLoaded;
-
-        //event EventHandler OnListItemsLoading;
-        //event EventHandler OnListItemsLoaded;
-
-        //event EventHandler OnItemLoaded;
-        //event EventHandler OnPriceLoaded;
-
-        //event EventHandler OnListPricesLoading;
-        //event EventHandler OnListPricesLoaded;
-
-        //event EventHandler OnIconLoading;
-        //event EventHandler OnIconLoaded;
+        /// <summary>
+        /// Статус лутбокса
+        /// </summary>
+        LootBoxState State { get; set; }
 
 
+        /// <summary>
+        /// Название лутбокса
+        /// </summary>
         string Name { get; set; }
 
+
+        /// <summary>
+        /// Прибыль
+        /// </summary>
         double Profit { get; }
+
+        /// <summary>
+        /// Прибыль с набором
+        /// </summary>
+        double ProfitWithBundle { get; }
+
+        /// <summary>
+        /// Прибыль без набора
+        /// </summary>
+        double ProfitWithoutBundle { get; }
+
+
+        /// <summary>
+        /// Количество предметов в лутбоксе
+        /// </summary>
+        int Count { get; }
         
         /// <summary>
         /// Предметы, которые содержатся в лутбоксе
         /// </summary>
         List<MarketItem> Items { get; set; }
         
+
         /// <summary>
         /// Описание
         /// </summary>
         List<Description> Description { get; set; }
 
+
         /// <summary>
         /// Иконка
         /// </summary>
         BitmapImage Icon { get; set; }
+
+        /// <summary>
+        /// URI путь к иконке
+        /// </summary>
+        string IconUri { get; set; }
 
 
         void Update();

@@ -20,10 +20,29 @@ namespace KFMarketAnalysis.ViewModels
 
         public IEnumerable<LootBoxVM> LootBoxes
         {
-            get => lootBoxes.ToArray().OrderByDescending(x => x.State);
+            get => lootBoxes.ToArray()
+                .OrderByDescending(x => x.LootBox.State)
+                .ThenByDescending(x => x.LootBox.ProfitWithoutBundle);
             set
             {
                 lootBoxes = new List<LootBoxVM>(value);
+
+                foreach (var item in lootBoxes)
+                {
+                    item.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == "OnDescriptionLoaded")
+                        {
+                            RaisePropertyChanged("OnDescriptionLoaded");
+                        }
+
+                        if (e.PropertyName == "OnItemLoaded")
+                            RaisePropertyChanged("OnItemLoaded");
+
+                        if (e.PropertyName == nameof(ILootBox.State))
+                            RaisePropertyChanged(nameof(LootBoxes));
+                    };
+                }
 
                 RaisePropertyChanged(nameof(LootBoxes));
             }
@@ -74,7 +93,7 @@ namespace KFMarketAnalysis.ViewModels
                 if (e.PropertyName == "OnItemLoaded")
                     RaisePropertyChanged("OnItemLoaded");
 
-                if(e.PropertyName == "OnStateChanged")
+                if(e.PropertyName == nameof(ILootBox.State))
                     RaisePropertyChanged(nameof(LootBoxes));
             };
         }

@@ -44,6 +44,7 @@ namespace KFMarketAnalysis.ViewModels
             .ToArray()
             .OrderByDescending(item => item.Item?.Price).ToList();
 
+
         public MarketItemListVM()
         {
             items = new List<MarketItemVM>();
@@ -51,12 +52,22 @@ namespace KFMarketAnalysis.ViewModels
 
             RaisePropertyChanged(nameof(Items));
         }
+
         public MarketItemListVM(LootBoxVM lootBoxVM, IEnumerable<MarketItemVM> collection)
         {
             this.lootBoxVM = lootBoxVM;
 
             items = new List<MarketItemVM>(collection);
             BindingOperations.EnableCollectionSynchronization(Items, _lock);
+
+            foreach (var item in items)
+            {
+                item.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == "OnItemLoaded")
+                        RaisePropertyChanged(nameof(Items));
+                };
+            }
 
             RaisePropertyChanged(nameof(Items));
         }

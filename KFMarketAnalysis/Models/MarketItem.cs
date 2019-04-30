@@ -16,9 +16,22 @@ namespace KFMarketAnalysis.Models
     {
         private double price;
         private BitmapImage icon;
+        private DateTime lastUpdate = DateTime.Now;
 
 
         public string Name { get; set; }
+
+        public DateTime LastUpdate
+        {
+            get => lastUpdate;
+            set
+            {
+                lastUpdate = value;
+
+                RaisePropertyChanged(nameof(LastUpdate));
+            }
+        }
+
 
         [JsonIgnore]
         public BitmapImage Icon
@@ -27,6 +40,8 @@ namespace KFMarketAnalysis.Models
             set
             {
                 icon = value;
+                icon.Freeze();
+
                 RaisePropertyChanged("OnIconLoaded");
             }
         }
@@ -74,13 +89,22 @@ namespace KFMarketAnalysis.Models
         {
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.Low, () =>
             {
-                Price = RequestsUtil.GetPrice(Name);
+                SetPrice(RequestsUtil.GetPrice(Name));
 
                 if (Price == -2)
                     return Task.FromResult(false);
 
                 return Task.FromResult(true);
             });
+        }
+
+        private void SetPrice(double d)
+        {
+            price = d;
+
+            LastUpdate = DateTime.Now;
+
+            RaisePropertyChanged("OnPriceLoaded");
         }
     }
 }

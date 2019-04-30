@@ -21,20 +21,32 @@ namespace KFMarketAnalysis.Models.LootBoxes
     /// </summary>
     public abstract class LootBoxBase : BindableBase, ILootBox
     {
+        private LootBoxState state;
+
         protected BitmapImage icon;
 
         protected string spanPattern = @"<br><span\sstyle=.{1,2}color:\s(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,45})<.{1,2}span>";
         protected string fontPattern = @"<br><font\scolor=.{1,2}(#[0-9|A-F|a-f]{6}).{1,2}>(.{1,45})<.{1,2}font>";
         
+
         public string Name { get; set; }
-        
-        public double Profit => Items.ToArray().Where(x => x.Price > 0)?.Sum(item => item.Price) ?? 0;
 
-        public bool IsItemsListLoaded { get; set; }
-        
-        public List<MarketItem> Items { get; set; }
 
-        public List<Description> Description { get; set; }
+        public double Profit => Items.ToArray().Where(x => x.Price > 0)?.Sum(item => item.Price) * 0.87 ?? 0;
+
+        public double ProfitWithBundle => Profit - 102.5 * Count;
+
+        public double ProfitWithoutBundle => Profit - 170 * Count;
+
+
+        public int Count => Items.Count;
+
+
+        public List<MarketItem> Items { get; set; } = new List<MarketItem>();
+
+
+        public List<Description> Description { get; set; } = new List<Description>();
+
 
         [JsonIgnore]
         public BitmapImage Icon
@@ -43,35 +55,56 @@ namespace KFMarketAnalysis.Models.LootBoxes
             set
             {
                 icon = value;
+                icon.Freeze();
 
                 RaisePropertyChanged("OnIconLoaded");
             }
         }
+
         public string IconUri
         {
             get => Icon?.UriSource?.ToString();
             set => Icon = new BitmapImage(new Uri(value));
         }
 
-        public LootBoxBase()
+        public LootBoxState State
         {
-            Items = new List<MarketItem>();
-            Description = new List<Description>();
+            get => state;
+            set
+            {
+                state = value;
+
+                RaisePropertyChanged(nameof(State));
+            }
+        }
+
+
+        public LootBoxBase() { }
+
+        public LootBoxBase(ILootBox lootBox)
+        {
+            Name = lootBox.Name;
+            Items = lootBox.Items;
+            IconUri = lootBox.IconUri;
+            Description = lootBox.Description;
+            State = lootBox.State;
+
+            foreach (var item in Items)
+            {
+                item.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == "OnPriceLoaded")
+                        RaisePropertyChanged("OnPriceLoaded");
+                };
+            }
         }
 
         public LootBoxBase(string name)
         {
-            Items = new List<MarketItem>();
-            Description = new List<Description>();
-
             Name = name;
         }
 
 
-        /// <summary>
-        /// Добавление предмета в лутбокс
-        /// </summary>
-        /// <param name="item"></param>
         public void AddItem(IMarketItem item)
         {
             item.PropertyChanged += (s, e) =>
@@ -85,11 +118,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
             RaisePropertyChanged("Items");
         }
 
-        /// <summary>
-        /// Загрузка иконки лутбокса
-        /// </summary>
-        /// <param name="code"></param>
-        /// <param name="name"></param>
+
         public virtual void GetIcon(string code, string name)
         {
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.WithoutDelay, () =>
@@ -103,13 +132,10 @@ namespace KFMarketAnalysis.Models.LootBoxes
             });
         }
 
-
-        /// <summary>
-        /// Загрузка описания лутбокса
-        /// </summary>
+        
         public virtual void LoadDescription()
         {
-            RaisePropertyChanged("OnAddInQueue");
+            State = LootBoxState.Queue;
 
             RequestHandler.GetInstance().AddAction(RequestHandler.Priority.High, async () =>
             {
@@ -165,12 +191,7 @@ namespace KFMarketAnalysis.Models.LootBoxes
                     match = match.NextMatch();
                 }
 
-                RequestHandler.GetInstance().AddAction(RequestHandler.Priority.High, () =>
-                {
-                    RaisePropertyChanged("OnDescriptionLoaded");
-
-                    return Task.FromResult(true);
-                }, false);
+                State = LootBoxState.DescriptionLoaded;
 
                 LoadItems();
 
@@ -180,27 +201,25 @@ namespace KFMarketAnalysis.Models.LootBoxes
 
         public virtual void Update()
         {
-            if (Description.Count == 0)
+            if(State <= LootBoxState.Queue)
+            {
                 LoadDescription();
-            else if (!IsItemsListLoaded)
+            }
+            else if (State <= LootBoxState.LoadStarted)
             {
                 Items.Clear();
                 LoadItems();
             }
             else
+            {
                 LoadPrices();
+            }
         }
-
-        /// <summary>
-        /// Загрузка предметов лутбокса
-        /// </summary>
+        
         public abstract void LoadItems();
 
-        public void LoadPrices()
+        protected void LoadPrices()
         {
-            if (!IsItemsListLoaded)
-                return;
-
             foreach (var item in Items)
             {
                 item.GetPrice();

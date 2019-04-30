@@ -42,8 +42,9 @@
 
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="3*"/>
                     <RowDefinition Height="2*"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
 
                 <!-- Item name -->
@@ -57,6 +58,16 @@
                 <Label Grid.Row="1"
                        Content="{Binding Price}"
                        FontSize="14"/>
+
+                <GridSplitter Grid.Row="1" 
+                              VerticalAlignment="Bottom"
+                              HorizontalAlignment="Stretch"
+                              Height="1" Width="auto" Margin="5,0,5,0"
+                              Background="{StaticResource WhiteTextColor}"/>
+                
+                <Label Grid.Row="2"
+                       Content="{Binding LastUpdate}"
+                       FontSize="11"/>
             </Grid>
         </Grid>
     </Border>
